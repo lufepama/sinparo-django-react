@@ -50,6 +50,37 @@ def add_new_post_home(request, username, token):
         except User.DoesNotExist:
             return Json({'error':'Ha habido un error.'})
 
+@csrf_exempt
+def add_new_post_friend_profile(request, username, token, id):
+    if not request.method == 'POST':
+        return JsonResponse({'error':'Hay un error con la petición'})
+
+    if is_user_authenticated(username, token):
+
+        data = json.loads(request.body)
+        post_content = data['post_content']
+
+        try:
+            current_user = User.objects.get(username=username)
+            try:
+                friend_user = User.objects.get(pk=id)
+                if post_content !='':
+                    new_post = UserPost(
+                        user=friend_user, post_content = post_content, 
+                        who_did_post = current_user.id,
+                        user_who_posted = {'username': current_user.username, 'profile_img':current_user.profile_image.url}
+                    )
+                    new_post.save()
+                    return JsonResponse({'success':'Ahi tienes, pirobo!'})
+            except User.DoesNotExist:
+                return JsonResponse({'error':'El perfil no existe!'})
+
+        except User.DoesNotExist:
+            return JsonResponse({'error':'El usuario no existe!'})
+    
+    else:
+        return JsonResponse({'error':'No has iniciado sesión!'})
+
 def get_post_list(request, username, token):
     
     try:
